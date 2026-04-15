@@ -259,9 +259,12 @@
       }
       #mosa-chat-tooltip {
         right: 80px;
+        left: 10px;
         bottom: 28px;
         font-size: 13px;
         padding: 8px 12px;
+        white-space: normal;
+        max-width: calc(100vw - 100px);
       }
     }
   `;

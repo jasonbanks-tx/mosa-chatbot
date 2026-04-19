@@ -40,7 +40,11 @@ No stair fees. No mileage fees. No material fees. No after-hours fees.
 
 PAYMENT
 We accept Zelle (no fee) and credit cards (3.5% surcharge). All accepted payment methods are listed at moversofsanantonio.com/rates.
+Our Zelle tag is moversofsa.
 Payment is due before your belongings are unloaded at the destination.
+
+LOADING-ONLY AND UNLOADING-ONLY SERVICES
+Yes, we offer loading-only and unloading-only jobs. These are billed at our regular hourly rates. The fuel fee for loading-only and unloading-only jobs is $50 — we come out in a company vehicle and bring dollies. Payment for loading-only and unloading-only jobs is cash or Zelle only (Zelle tag: moversofsa). Credit cards are not accepted for these jobs.
 
 BOOKING AND SCHEDULING
 To get a quote, call us at 210-348-8199 or fill out the online quote form at moversofsanantonio.com.

@@ -34,7 +34,7 @@ Friday and Sunday: $115/hr (2 movers + truck)
 Saturday: $125/hr (2 movers + truck)
 Need a 3rd mover? Add $50/hr.
 There is a 2-hour minimum on all moves. After the first 2 hours, we bill in 15-minute increments.
-One-time fuel fee: $49.95 (covers fuel, moving blankets, straps, dollies, and shrink wrap).
+One-time fuel fee: $69.95 (covers fuel, moving blankets, straps, dollies, and shrink wrap).
 Drive time is charged for moves more than 10 miles from our shop.
 No stair fees. No mileage fees. No material fees. No after-hours fees.
 
@@ -48,13 +48,13 @@ Yes, we offer loading-only and unloading-only jobs. These are billed at our regu
 
 BOOKING AND SCHEDULING
 To get a quote, call us at 210-348-8199 or fill out the online quote form at moversofsanantonio.com.
-We do not require a deposit. A one-time fuel fee of $49.95 is collected at booking. This fee is 100% refundable if you cancel at least 48 hours before your move. If you cancel within 48 hours, the fee is non-refundable but can be applied toward a future move.
+We do not require a deposit. A one-time fuel fee of $69.95 is collected at booking. This fee is 100% refundable if you cancel at least 48 hours before your move. If you cancel within 48 hours, the fee is non-refundable but can be applied toward a future move.
 For most moves, booking 1 to 2 weeks in advance is sufficient. For summer moves (May through September) or weekend moves, we recommend booking 3 to 4 weeks ahead since those dates fill up faster.
 If you need to change your move date, contact us as soon as possible at 210-348-8199.
 We do our best to accommodate last-minute and same-day moves based on availability. Call us directly.
 
 FEES — COMPLETE BREAKDOWN
-The only fees we charge are our hourly rate and the one-time $49.95 fuel fee. That is it. No stair fees, no mileage fees, no material fees, no after-hours fees, no hidden charges. If you see additional charges on your card or bank statement beyond what we quoted, those are from your card issuer or bank — not from us. Contact your bank directly for those. Note: credit card transactions do have a 3.5% surcharge applied by us.
+The only fees we charge are our hourly rate and the one-time $69.95 fuel fee. That is it. No stair fees, no mileage fees, no material fees, no after-hours fees, no hidden charges. If you see additional charges on your card or bank statement beyond what we quoted, those are from your card issuer or bank — not from us. Contact your bank directly for those. Note: credit card transactions do have a 3.5% surcharge applied by us.
 
 HOW LONG WILL MY MOVE TAKE?
 These are general estimates not including drive time:

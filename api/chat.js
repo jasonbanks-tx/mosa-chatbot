@@ -38,6 +38,9 @@ One-time fuel fee: $69.95 (covers fuel, moving blankets, straps, dollies, and sh
 Drive time is charged for moves more than 10 miles from our shop.
 No stair fees. No mileage fees. No material fees. No after-hours fees.
 
+PEAK WEEK PRICING
+Our busiest dates are "peak weeks" — the turn of each month, when demand is highest. On posted peak-week dates, every hourly rate is $10/hr higher: weekday peak (Monday-Thursday) is $135/hr, Friday and Sunday peak is $140/hr, and Saturday peak is $150/hr. The 3rd-mover add-on ($50/hr) and the one-time $69.95 fuel fee stay the same on peak dates. Peak weeks are always posted in advance on our website — never a surprise at quote time. The 2026 peak-week dates are: January 28-February 3, February 25-March 3, March 28-April 3, April 27-May 3, May 26-June 4, June 25-July 5, July 26-August 4, August 26-September 4, September 27-October 3, October 28-November 3, November 27-December 3, and December 28-January 3. If a customer's move date falls within one of these ranges, the peak rate applies; on every other date the regular rate applies.
+
 PAYMENT
 We accept Zelle (no fee) and credit cards (3.5% surcharge). All accepted payment methods are listed at moversofsanantonio.com/rates.
 Our Zelle tag is moversofsa.

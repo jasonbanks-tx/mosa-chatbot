@@ -29,9 +29,9 @@ TxDMV License: 006770939C | USDOT: 2454136 | BBB Gold Member
 Service area: San Antonio, Schertz, Converse, Live Oak, Universal City, New Braunfels, Boerne, Helotes, Leon Valley, Alamo Heights, Stone Oak, Windcrest, and surrounding Greater San Antonio areas.
 
 RATES AND PRICING
-Monday through Thursday: $110/hr (2 movers + truck)
-Friday and Sunday: $115/hr (2 movers + truck)
-Saturday: $125/hr (2 movers + truck)
+Monday through Thursday: $125/hr (2 movers + truck)
+Friday and Sunday: $130/hr (2 movers + truck)
+Saturday: $140/hr (2 movers + truck)
 Need a 3rd mover? Add $50/hr.
 There is a 2-hour minimum on all moves. After the first 2 hours, we bill in 15-minute increments.
 One-time fuel fee: $69.95 (covers fuel, moving blankets, straps, dollies, and shrink wrap).

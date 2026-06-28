@@ -28,18 +28,7 @@ Google Rating: 4.7 stars (3,201+ reviews)
 TxDMV License: 006770939C | USDOT: 2454136 | BBB Gold Member
 Service area: San Antonio, Schertz, Converse, Live Oak, Universal City, New Braunfels, Boerne, Helotes, Leon Valley, Alamo Heights, Stone Oak, Windcrest, and surrounding Greater San Antonio areas.
 
-RATES AND PRICING
-Monday through Thursday: $125/hr (2 movers + truck)
-Friday and Sunday: $130/hr (2 movers + truck)
-Saturday: $140/hr (2 movers + truck)
-Need a 3rd mover? Add $50/hr.
-There is a 2-hour minimum on all moves. After the first 2 hours, we bill in 15-minute increments.
-One-time fuel fee: $69.95 (covers fuel, moving blankets, straps, dollies, and shrink wrap).
-Drive time is charged for moves more than 10 miles from our shop.
-No stair fees. No mileage fees. No material fees. No after-hours fees.
-
-PEAK WEEK PRICING
-Our busiest dates are "peak weeks" — the turn of each month, when demand is highest. On posted peak-week dates, every hourly rate is $10/hr higher: weekday peak (Monday-Thursday) is $135/hr, Friday and Sunday peak is $140/hr, and Saturday peak is $150/hr. The 3rd-mover add-on ($50/hr) and the one-time $69.95 fuel fee stay the same on peak dates. Peak weeks are always posted in advance on our website — never a surprise at quote time. The 2026 peak-week dates are: January 28-February 3, February 25-March 3, March 28-April 3, April 27-May 3, May 26-June 4, June 25-July 5, July 26-August 4, August 26-September 4, September 27-October 3, October 28-November 3, November 27-December 3, and December 28-January 3. If a customer's move date falls within one of these ranges, the peak rate applies; on every other date the regular rate applies.
+{{RATES_SECTION}}
 
 PAYMENT
 We accept Zelle (no fee) and credit cards (3.5% surcharge). All accepted payment methods are listed at moversofsanantonio.com/rates.
@@ -117,6 +106,35 @@ Tipping is never required but is always appreciated. A common guideline is $20 t
 WHAT TO KEEP WITH YOU ON MOVING DAY (NOT ON THE TRUCK)
 Photo ID, passport, Social Security cards, financial and legal documents, medications, jewelry, valuables, phone chargers, laptops, house keys, and anything you will need your first night before boxes are unpacked.`;
 
+const DEFAULT_RATES = { weekday:125, friSun:130, saturday:140, thirdMover:50, fuelFee:69.95, peakSurcharge:10 };
+const PK_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function pkEom(y,m){ const s=(m>=4&&m<=7); const lN=s?6:4; let fN=s?4:3; if(m===5)fN=5; const d=new Date(y,m+1,0).getDate(); return {start:new Date(y,m,d-lN+1), end:new Date(y,m+1,fN)}; }
+function pkFmt(d){ return PK_MONTHS[d.getMonth()]+" "+d.getDate(); }
+function currentPeakWindows(){ const t=new Date(),y=t.getFullYear(),m=t.getMonth(); return [-1,0,1].map(o=>{let yy=y,mm=m+o;if(mm<0){mm+=12;yy--;}if(mm>11){mm-=12;yy++;}return pkEom(yy,mm);}); }
+function buildRatesSection(R){
+  const pW=R.weekday+R.peakSurcharge, pF=R.friSun+R.peakSurcharge, pS=R.saturday+R.peakSurcharge;
+  const wins = currentPeakWindows().map(w=>pkFmt(w.start)+" to "+pkFmt(w.end)).join("; ");
+  return `RATES AND PRICING
+Monday through Thursday: $${R.weekday}/hr (2 movers + truck)
+Friday and Sunday: $${R.friSun}/hr (2 movers + truck)
+Saturday: $${R.saturday}/hr (2 movers + truck)
+Need a 3rd mover? Add $${R.thirdMover}/hr.
+There is a 2-hour minimum on all moves. After the first 2 hours, we bill in 15-minute increments.
+One-time fuel fee: $${R.fuelFee} (covers fuel, moving blankets, straps, dollies, and shrink wrap).
+Drive time is charged for moves more than 10 miles from our shop.
+No stair fees. No mileage fees. No material fees. No after-hours fees.
+
+PEAK WEEK PRICING
+Our busiest dates are "peak weeks" - the turn of each month, when demand is highest. On posted peak-week dates, every hourly rate is $${R.peakSurcharge}/hr higher: weekday peak (Monday-Thursday) is $${pW}/hr, Friday and Sunday peak is $${pF}/hr, and Saturday peak is $${pS}/hr. The 3rd-mover add-on and the one-time fuel fee stay the same on peak dates. Peak weeks are always posted in advance at moversofsanantonio.com/rates - never a surprise. The current peak weeks are: ${wins}. If a customer's move date falls within one of these ranges, the peak rate applies; on every other date the regular rate applies.`;
+}
+async function getRates(){
+  try {
+    const r = await fetch("https://moversofsanantonio.com/rates.json?v=" + Date.now());
+    if (r.ok) { const j = await r.json(); return Object.assign({}, DEFAULT_RATES, j); }
+  } catch (e) {}
+  return DEFAULT_RATES;
+}
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -149,6 +167,9 @@ export default async function handler(req, res) {
       parts: [{ text: msg.content }],
     }));
 
+    const liveRates = await getRates();
+    const sysPrompt = SYSTEM_PROMPT.replace("{{RATES_SECTION}}", buildRatesSection(liveRates));
+
     let reply = null;
     let attempts = 0;
     let finalStatus = "success";
@@ -166,7 +187,7 @@ export default async function handler(req, res) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             system_instruction: {
-              parts: [{ text: SYSTEM_PROMPT }],
+              parts: [{ text: sysPrompt }],
             },
             contents,
             generationConfig: {

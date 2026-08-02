@@ -106,7 +106,7 @@ Tipping is never required but is always appreciated. A common guideline is $20 t
 WHAT TO KEEP WITH YOU ON MOVING DAY (NOT ON THE TRUCK)
 Photo ID, passport, Social Security cards, financial and legal documents, medications, jewelry, valuables, phone chargers, laptops, house keys, and anything you will need your first night before boxes are unpacked.`;
 
-const DEFAULT_RATES = { weekday:125, friSun:130, saturday:140, thirdMover:50, fuelFee:69.95, peakSurcharge:10 };
+const DEFAULT_RATES = { weekday:120, friSun:125, saturday:135, thirdMover:50, fuelFee:69.95, peakSurcharge:10 };
 const PK_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 function pkEom(y,m){ const s=(m>=4&&m<=7); const lN=s?6:4; let fN=s?4:3; if(m===5)fN=5; const d=new Date(y,m+1,0).getDate(); return {start:new Date(y,m,d-lN+1), end:new Date(y,m+1,fN)}; }
 function pkFmt(d){ return PK_MONTHS[d.getMonth()]+" "+d.getDate(); }

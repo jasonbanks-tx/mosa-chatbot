@@ -127,14 +127,54 @@ async function fetchJsonWithin(url, ms){
     clearTimeout(timer);
   }
 }
+// Today's date in San Antonio, written YYYY-MM-DD (this server's own clock runs on UTC).
+function centralTodayIso(){
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  } catch (e) {
+    return null;
+  }
+}
+const RATE_TABLE_DAYS = 60;
 async function getPeakInfo(){
-  const j = await fetchJsonWithin("https://moversofsanantonio.com/api/peak", SITE_LOOKUP_MS);
+  const today = centralTodayIso();
+  const range = /^\d{4}-\d{2}-\d{2}$/.test(String(today)) ? "?from=" + today + "&days=" + RATE_TABLE_DAYS : "";
+  const j = await fetchJsonWithin("https://moversofsanantonio.com/api/peak" + range, SITE_LOOKUP_MS);
   return (j && j.ok === true) ? j : null;
+}
+// The posted rate for each of the next days, one per line, so the bot can read a rate off the
+// list instead of working out weekdays and Peak Weeks itself. Returns "" if the website did
+// not send a usable list - then the bot falls back to the general rules above it.
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function buildRateTable(P, R, peakOn){
+  if (!P || !Array.isArray(P.days) || P.days.length === 0) return "";
+  const lines = [];
+  for (const d of P.days) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d && d.iso));
+    if (!m || typeof d.rate !== "number" || !isFinite(d.rate)) return "";
+    const t = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    lines.push(DAY_NAMES[t.getUTCDay()] + ", " + MONTH_NAMES[t.getUTCMonth()] + " " + t.getUTCDate() + ", " + m[1] + ": $" + d.rate + "/hr" + (d.peak ? " (peak week)" : ""));
+  }
+  const first = lines[0].split(":")[0];
+  const last = lines[lines.length - 1].split(":")[0];
+  const peakWords = peakOn
+    ? ` If the date is marked (peak week), say it is a peak-week date.`
+    : ``;
+  const offList = peakOn
+    ? `If the customer's date is NOT on the list (it is before ${first} or after ${last}), you do NOT know the rate for that date. Do not state one as if it were confirmed. You may say what the regular rate is for that day of the week, but you must call it the regular rate and add that peak-week dates at the turn of each month cost more, so the exact rate for their date is posted at moversofsanantonio.com/rates or they can call 210-348-8199. If the date has already passed, say you can only quote upcoming dates.`
+    : `If the customer's date is NOT on the list (it is before ${first} or after ${last}), give the regular rate for that day of the week from RATES AND PRICING and say rates can change, so they should confirm at moversofsanantonio.com/rates or call 210-348-8199. If the date has already passed, say you can only quote upcoming dates.`;
+  return `
+
+POSTED RATE BY MOVE DATE for Movers of San Antonio local moves (2 movers + truck), ${first} through ${last}:
+${lines.join("\n")}
+
+HOW TO USE THE LIST ABOVE: When a customer names a move date that is on the list, tell them the hourly rate shown for that exact date. That is the posted rate for 2 movers and a truck - do NOT tell them to call just to find out the rate, and do not answer "that's a great question". If they ask about 3 movers, add the 3rd-mover amount ($${R.thirdMover}/hr) to the rate shown. If they give a date with no year, use the next time that date comes up. If the weekday they say does not match the date on the list, tell them which weekday that date falls on and give the rate for the date.${peakWords} ${offList}`;
 }
 function buildPeakSection(R, P){
   if (P && P.enabled === false) {
     return `PEAK WEEK PRICING
-Peak-week pricing is switched off right now. The regular rates above apply on every date. Do not quote a peak-week rate.`;
+Peak-week pricing is switched off right now. The regular rates above apply on every date. Do not quote a peak-week rate.${buildRateTable(P, R, false)}`;
   }
   const sur = (P && typeof P.surcharge === "number") ? P.surcharge : R.peakSurcharge;
   const pW=R.weekday+sur, pF=R.friSun+sur, pS=R.saturday+sur;
@@ -147,7 +187,7 @@ Peak-week pricing is switched off right now. The regular rates above apply on ev
     dates = `You do not have the exact peak-week dates right now. Do NOT guess or name any dates. Tell the customer the current peak-week dates are posted at moversofsanantonio.com/rates, or they can call 210-348-8199.`;
   }
   return `PEAK WEEK PRICING
-Our busiest dates are "peak weeks" - the turn of each month, when demand is highest. On posted peak-week dates, every hourly rate is $${sur}/hr higher: weekday peak (Monday-Thursday) is $${pW}/hr, Friday and Sunday peak is $${pF}/hr, and Saturday peak is $${pS}/hr. The 3rd-mover add-on and the one-time fuel fee stay the same on peak dates. Peak weeks are always posted in advance at moversofsanantonio.com/rates - never a surprise. ${dates}`;
+Our busiest dates are "peak weeks" - the turn of each month, when demand is highest. On posted peak-week dates, every hourly rate is $${sur}/hr higher: weekday peak (Monday-Thursday) is $${pW}/hr, Friday and Sunday peak is $${pF}/hr, and Saturday peak is $${pS}/hr. The 3rd-mover add-on and the one-time fuel fee stay the same on peak dates. Peak weeks are always posted in advance at moversofsanantonio.com/rates - never a surprise. ${dates}${buildRateTable(P, R, true)}`;
 }
 function buildRatesSection(R, P){
   return `RATES AND PRICING
@@ -217,6 +257,7 @@ export default async function handler(req, res) {
     let thinkingCapped = true;
     let finishReason = null;
     let thoughtsTokens = null;
+    let googleRequests = 0;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       attempts = attempt + 1;
@@ -224,6 +265,7 @@ export default async function handler(req, res) {
         await new Promise((r) => setTimeout(r, 1000 * attempt));
       }
 
+      googleRequests++;
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
         {
@@ -252,9 +294,18 @@ export default async function handler(req, res) {
 
       if (response.ok) {
         const data = await response.json();
-        reply = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+        // Put together every piece of the answer Google sent, skipping any hidden "thought" piece.
+        const parts = data.candidates?.[0]?.content?.parts;
+        const text = (Array.isArray(parts) ? parts : [])
+          .filter((part) => part && !part.thought && typeof part.text === "string")
+          .map((part) => part.text)
+          .join("")
+          .trim();
         finishReason = data.candidates?.[0]?.finishReason || null;
         thoughtsTokens = data.usageMetadata?.thoughtsTokenCount ?? null;
+        // MAX_TOKENS means Google ran out of room and the answer stops mid-sentence. Never show
+        // that to a customer: treat it as a failed try (it is retried, then the fallback).
+        reply = (text && finishReason !== "MAX_TOKENS") ? text : null;
         if (reply) break;
       } else {
         const errorData = await response.text();
@@ -281,6 +332,7 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString(),
       status: finalStatus,
       attempts,
+      googleRequests,
       finishReason,
       thoughtsTokens,
       thinkingCapped,

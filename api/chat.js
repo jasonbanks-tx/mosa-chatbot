@@ -205,9 +205,16 @@ export default async function handler(req, res) {
     let reply = null;
     let attempts = 0;
     let finalStatus = "success";
-    // Thinking is turned OFF so the whole 512-token budget goes to the visible reply. With it on,
-    // the hidden thinking shared that budget and some replies were cut off mid-sentence.
-    let thinkingOff = true;
+    // Google counts the model's hidden "thinking" and the visible reply against ONE limit
+    // (maxOutputTokens). With the old 512 limit and unlimited thinking, about 1 reply in 10 was
+    // cut off mid-sentence. So thinking is CAPPED (THINKING_BUDGET) and the limit is big enough
+    // (REPLY_LIMIT) that the reply always has at least REPLY_LIMIT - THINKING_BUDGET tokens left.
+    // Measured live 2026-11-16 on made-up questions: thinking off = 0 of 40 cut off but only 7 of
+    // 12 Peak Week date questions answered; capped at 1024 = 0 of 20 cut off and 28 of 28 answered.
+    // Change these two numbers only with a fresh measurement.
+    const THINKING_BUDGET = 1024;
+    const REPLY_LIMIT = 2048;
+    let thinkingCapped = true;
     let finishReason = null;
     let thoughtsTokens = null;
 
@@ -230,8 +237,8 @@ export default async function handler(req, res) {
             generationConfig: {
               temperature: 0.7,
               topP: 0.9,
-              maxOutputTokens: 2048,
-              ...(thinkingOff ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
+              maxOutputTokens: REPLY_LIMIT,
+              ...(thinkingCapped ? { thinkingConfig: { thinkingBudget: THINKING_BUDGET } } : {}),
             },
             safetySettings: [
               { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -252,10 +259,10 @@ export default async function handler(req, res) {
       } else {
         const errorData = await response.text();
         console.error(`Attempt ${attempt + 1} failed:`, errorData);
-        if (response.status === 400 && thinkingOff) {
-          // Google refused the request with thinking switched off. Ask once more the old way
-          // rather than fail the customer. This does not use up a retry.
-          thinkingOff = false;
+        if (response.status === 400 && thinkingCapped) {
+          // Google refused the request with the thinking cap. Ask once more without it rather
+          // than fail the customer. This does not use up a retry.
+          thinkingCapped = false;
           attempt--;
           continue;
         }
@@ -276,7 +283,7 @@ export default async function handler(req, res) {
       attempts,
       finishReason,
       thoughtsTokens,
-      thinkingOff,
+      thinkingCapped,
       responseTimeMs: Date.now() - startTime,
       messageCount: messages.length,
       userMessage: latestUserMsg?.content?.slice(0, 200) || "",

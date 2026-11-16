@@ -111,15 +111,25 @@ const DEFAULT_RATES = { weekday:120, friSun:125, saturday:135, thirdMover:50, fu
 // The website holds the ONE date rule (moversofsanantonio.com/js/peak-week.js) and answers
 // at /api/peak. If that cannot be reached, the bot gives NO dates and sends the customer to
 // the rates page - it never guesses. Do not paste a copy of the rule back in here.
-async function getPeakInfo(){
+// One website lookup with a hard time limit that also covers reading the answer.
+// Returns the parsed JSON, or null if it took too long, failed, or was not a good answer.
+const SITE_LOOKUP_MS = 2500;
+async function fetchJsonWithin(url, ms){
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch("https://moversofsanantonio.com/api/peak?v=" + Date.now());
-    if (r.ok) {
-      const j = await r.json();
-      if (j && j.ok) return j;
-    }
-  } catch (e) {}
-  return null;
+    const r = await fetch(url, { signal: ctl.signal });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+async function getPeakInfo(){
+  const j = await fetchJsonWithin("https://moversofsanantonio.com/api/peak", SITE_LOOKUP_MS);
+  return (j && j.ok === true) ? j : null;
 }
 function buildPeakSection(R, P){
   if (P && P.enabled === false) {
@@ -131,7 +141,8 @@ Peak-week pricing is switched off right now. The regular rates above apply on ev
   let dates;
   if (P && Array.isArray(P.windows) && P.windows.length) {
     const wins = P.windows.map(w => w.label + (w.active ? " (happening now)" : "")).join("; ");
-    dates = `The next peak weeks are: ${wins}. If a customer's move date falls within one of these ranges, the peak rate applies. On other dates before the last range listed, the regular rate applies. For a move date AFTER the last range listed, do not guess - peak weeks continue at the turn of every month, so send the customer to moversofsanantonio.com/rates or have them call for the exact dates.`;
+    const fromDay = (typeof P.today === "string" && P.today) ? P.today : "today";
+    dates = `The next peak weeks are: ${wins}. If a customer's move date falls within one of these ranges, the peak rate applies. For any other date from ${fromDay} through the end of the last range listed, the regular rate applies. For a move date AFTER the last range listed, or any date BEFORE ${fromDay}, do not guess - peak weeks happen at the turn of every month, so send the customer to moversofsanantonio.com/rates or have them call for the exact dates.`;
   } else {
     dates = `You do not have the exact peak-week dates right now. Do NOT guess or name any dates. Tell the customer the current peak-week dates are posted at moversofsanantonio.com/rates, or they can call 210-348-8199.`;
   }
@@ -152,11 +163,8 @@ No stair fees. No mileage fees. No material fees. No after-hours fees.
 ${buildPeakSection(R, P)}`;
 }
 async function getRates(){
-  try {
-    const r = await fetch("https://moversofsanantonio.com/rates.json?v=" + Date.now());
-    if (r.ok) { const j = await r.json(); return Object.assign({}, DEFAULT_RATES, j); }
-  } catch (e) {}
-  return DEFAULT_RATES;
+  const j = await fetchJsonWithin("https://moversofsanantonio.com/rates.json?v=" + Date.now(), SITE_LOOKUP_MS);
+  return (j && typeof j === "object") ? Object.assign({}, DEFAULT_RATES, j) : DEFAULT_RATES;
 }
 
 export default async function handler(req, res) {

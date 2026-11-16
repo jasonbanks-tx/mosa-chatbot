@@ -205,6 +205,11 @@ export default async function handler(req, res) {
     let reply = null;
     let attempts = 0;
     let finalStatus = "success";
+    // Thinking is turned OFF so the whole 512-token budget goes to the visible reply. With it on,
+    // the hidden thinking shared that budget and some replies were cut off mid-sentence.
+    let thinkingOff = true;
+    let finishReason = null;
+    let thoughtsTokens = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       attempts = attempt + 1;
@@ -226,6 +231,7 @@ export default async function handler(req, res) {
               temperature: 0.7,
               topP: 0.9,
               maxOutputTokens: 512,
+              ...(thinkingOff ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
             },
             safetySettings: [
               { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -240,10 +246,19 @@ export default async function handler(req, res) {
       if (response.ok) {
         const data = await response.json();
         reply = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+        finishReason = data.candidates?.[0]?.finishReason || null;
+        thoughtsTokens = data.usageMetadata?.thoughtsTokenCount ?? null;
         if (reply) break;
       } else {
         const errorData = await response.text();
         console.error(`Attempt ${attempt + 1} failed:`, errorData);
+        if (response.status === 400 && thinkingOff) {
+          // Google refused the request with thinking switched off. Ask once more the old way
+          // rather than fail the customer. This does not use up a retry.
+          thinkingOff = false;
+          attempt--;
+          continue;
+        }
         if (response.status !== 503 && response.status !== 429) break;
       }
     }
@@ -259,6 +274,9 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString(),
       status: finalStatus,
       attempts,
+      finishReason,
+      thoughtsTokens,
+      thinkingOff,
       responseTimeMs: Date.now() - startTime,
       messageCount: messages.length,
       userMessage: latestUserMsg?.content?.slice(0, 200) || "",

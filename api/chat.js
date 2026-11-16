@@ -230,8 +230,8 @@ export default async function handler(req, res) {
             generationConfig: {
               temperature: 0.7,
               topP: 0.9,
-              maxOutputTokens: 512,
-              ...(thinkingOff ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+              maxOutputTokens: 2048,
+              ...(thinkingOff ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
             },
             safetySettings: [
               { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
